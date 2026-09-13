@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///D:/TEYRO/app/layout.tsx"],"sourcesContent":["// Root layout component that wraps every page in the app with HTML and body tags\nimport \"./globals.css\";\n\n// Metadata for the app: used in the browser tab title and SEO description\nexport const metadata = { title: \"Teyro — T-Shirts\", description: \"Simple T-shirt store\" };\n\n// Root layout component\nexport default function RootLayout({children}:{children:React.ReactNode}) {\n  return <html lang=\"en\"><body>{children}</body></html>;\n}\n"],"names":["metadata","title","description","RootLayout","children","lang"],"mappings":"AAAA,iFAAiF;;;;;;;;;;AAI1E,MAAMA,WAAW;IAAEC,OAAO;IAAoBC,aAAa;AAAuB;AAG1E,SAASC,WAAW,EAACC,QAAQ,EAA4B;IACtE,qBAAO,8OAAC;QAAKC,MAAK;kBAAK,cAAA,8OAAC;sBAAMD;;;;;;;;;;;AAChC"}},
+    {"offset": {"line": 42, "column": 0}, "map": {"version":3,"sources":["file:///D:/TEYRO/node_modules/next/src/server/route-modules/app-page/vendored/rsc/react-jsx-dev-runtime.ts"],"sourcesContent":["module.exports = (\n  require('../../module.compiled') as typeof import('../../module.compiled')\n).vendored['react-rsc']!.ReactJsxDevRuntime\n"],"names":["module","exports","require","vendored","ReactJsxDevRuntime"],"mappings":"AAAAA,OAAOC,OAAO,GACZC,QAAQ,4HACRC,QAAQ,CAAC,YAAY,CAAEC,kBAAkB","ignoreList":[0]}}]
+}

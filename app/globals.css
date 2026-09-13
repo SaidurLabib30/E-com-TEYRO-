@@ -1,0 +1,57 @@
+/* Import Tailwind CSS framework */
+@import "tailwindcss";
+
+/* CSS custom properties for background and text colors */
+:root { --bg:#f8f7f4; --ink:#171717; --brand-color:#d8b36a; }
+
+/* Apply border-box sizing to all elements for consistent box model */
+* { box-sizing:border-box; }
+
+/* Base body styles: reset margin, set background and font */
+body { margin:0; background:var(--bg); color:var(--ink); font-family:Arial, Helvetica, sans-serif; }
+
+/* Ensure all buttons show a pointer cursor for interactivity */
+button { cursor:pointer; }
+
+/* Customer dashboard layout: dark theme with radial gradient overlays for visual depth */
+.customer-dashboard {
+ min-height:100vh;
+ color-scheme:dark;
+ background:
+  radial-gradient(circle at 12% -10%, rgba(216,179,106,.16), transparent 32rem),
+  radial-gradient(circle at 90% 15%, rgba(95,122,160,.14), transparent 30rem),
+  linear-gradient(180deg,#10151f 0%,#0b0e14 100%);
+}
+
+/* Separate the premium upper customer area from the unchanged collection background */
+.customer-upper-section {
+ background:
+  radial-gradient(circle at 78% 18%, rgba(95,122,160,.16), transparent 26rem),
+  linear-gradient(180deg,#172f4d 0%,#0f1f35 100%);
+ border-bottom:1px solid rgba(216,179,106,.18);
+}
+
+/* Admin dashboard layout: dark theme with cyan/emerald gradient overlays */
+.admin-dashboard {
+ min-height:100vh;
+ color-scheme:dark;
+ background:
+  radial-gradient(circle at 8% -10%, rgba(34,211,238,.14), transparent 30rem),
+  radial-gradient(circle at 92% 8%, rgba(52,211,153,.10), transparent 32rem),
+  linear-gradient(180deg,#0b1220 0%,#080d18 100%);
+}
+
+/* Shared brand treatment keeps each dashboard's logo and brand name aligned */
+.brand-logo { background:var(--brand-color); }
+.brand-name {
+ background:var(--brand-color);
+ background-clip:text;
+ -webkit-background-clip:text;
+ color:transparent;
+}
+
+/* Ensure dropdown options in admin panel are readable against dark backgrounds */
+.admin-dashboard select option {
+ background:#0f172a;
+ color:#e2e8f0;
+}
