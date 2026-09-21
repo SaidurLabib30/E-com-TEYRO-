@@ -454,6 +454,10 @@
     top: 0;
   }
 
+  .top-1\/2 {
+    top: 50%;
+  }
+
   .top-2 {
     top: calc(var(--spacing) * 2);
   }
@@ -636,6 +640,10 @@
     margin-bottom: calc(var(--spacing) * 12);
   }
 
+  .ml-auto {
+    margin-left: auto;
+  }
+
   .block {
     display: block;
   }
@@ -784,6 +792,10 @@
     min-width: 760px;
   }
 
+  .flex-1 {
+    flex: 1;
+  }
+
   .shrink-0 {
     flex-shrink: 0;
   }
@@ -800,6 +812,11 @@
 
   .translate-x-0 {
     --tw-translate-x: 0px;
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+
+  .-translate-y-1\/2 {
+    --tw-translate-y: calc(calc(1 / 2 * 100%) * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
 
@@ -1145,6 +1162,11 @@
     background-color: #101722;
   }
 
+  .bg-\[\#111827\]\/40 {
+    background-color: #11182766;
+    background-color: lab(8.15142% .643015 -11.4721 / .4);
+  }
+
   .bg-\[\#172033\] {
     background-color: #172033;
   }
@@ -1427,6 +1449,10 @@
     padding: calc(var(--spacing) * 8);
   }
 
+  .p-10 {
+    padding: calc(var(--spacing) * 10);
+  }
+
   .px-2 {
     padding-inline: calc(var(--spacing) * 2);
   }
@@ -1531,8 +1557,16 @@
     padding-top: calc(var(--spacing) * 20);
   }
 
+  .pr-4 {
+    padding-right: calc(var(--spacing) * 4);
+  }
+
   .pb-3 {
     padding-bottom: calc(var(--spacing) * 3);
+  }
+
+  .pb-4 {
+    padding-bottom: calc(var(--spacing) * 4);
   }
 
   .pb-16 {
@@ -1541,6 +1575,10 @@
 
   .pb-24 {
     padding-bottom: calc(var(--spacing) * 24);
+  }
+
+  .pl-9 {
+    padding-left: calc(var(--spacing) * 9);
   }
 
   .text-center {
@@ -1805,6 +1843,11 @@
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
 
+  .shadow-inner {
+    --tw-shadow: inset 0 2px 4px 0 var(--tw-shadow-color, #0000000d);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+
   .shadow-lg {
     --tw-shadow: 0 10px 15px -3px var(--tw-shadow-color, #0000001a), 0 4px 6px -4px var(--tw-shadow-color, #0000001a);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
@@ -2001,6 +2044,10 @@
 
   .file\:text-cyan-200::file-selector-button {
     color: var(--color-cyan-200);
+  }
+
+  .placeholder\:text-\[\#8a93a1\]::placeholder {
+    color: #8a93a1;
   }
 
   .placeholder\:text-\[\#8f99a8\]::placeholder {
@@ -2328,6 +2375,10 @@
 
     .md\:block {
       display: block;
+    }
+
+    .md\:flex {
+      display: flex;
     }
 
     .md\:hidden {

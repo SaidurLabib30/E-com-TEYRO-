@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 // Icons from lucide-react library
-import { ShoppingBag } from 'lucide-react';
+import { Search, ShoppingBag } from 'lucide-react';
 import { CustomerAuthPanel, CustomerDashboard } from './customer-account';
 
 // Product store - shared between admin and public pages
@@ -18,6 +18,32 @@ export default function Home(){
   const [cart,setCart]=useState(0);
   // Product catalog state - synced with the shared product store
   const [products,setProducts]=useState(getProducts());
+  const [searchTerm,setSearchTerm]=useState('');
+
+  const normalizeSearchText = (value: string) =>
+    value.toLowerCase().replace(/[-_\s]+/g, '').replace(/&/g, 'and');
+
+  const filteredProducts = products.filter((product) => {
+    const term = searchTerm.trim();
+    if (!term) return true;
+
+    const normalizedTerm = normalizeSearchText(term);
+    const category = normalizeSearchText(product.category || '');
+
+    if (normalizedTerm.includes('tshirt') || normalizedTerm.includes('tee')) {
+      return category === 'tshirts';
+    }
+
+    if (normalizedTerm.includes('hoodie')) {
+      return category === 'hoodies';
+    }
+
+    if (normalizedTerm.includes('shirt')) {
+      return category === 'shirts';
+    }
+
+    return category.includes(normalizedTerm);
+  });
 
   // Sync cart count from localStorage on mount and listen for cart update events
   useEffect(()=>{
@@ -45,19 +71,49 @@ export default function Home(){
     <div className="customer-upper-section">
     {/* Sticky header with logo, tagline, and cart button */}
     <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0d1017]/90 backdrop-blur">
-     <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
+     <div className="mx-auto flex max-w-6xl items-center gap-3 px-5 py-5">
       {/* Brand logo with gold accent color */}
       <div className="flex items-center gap-2.5">
       <span className="brand-logo inline-flex items-center justify-center w-8 h-8 rounded-lg text-[#11141b] font-black text-sm">T</span>
       <span className="brand-name text-xl font-black tracking-[.22em]">TEYRO</span>
      </div>
+
+      {/* Search bar visible on large screens and centered in the header */}
+      <div className="hidden flex-1 justify-center md:flex">
+        <label className="flex w-full max-w-md items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-[#b7bfca] shadow-inner shadow-black/10">
+          <Search size={16} className="text-[#d8b36a]" />
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search t-shirts"
+            aria-label="Search products"
+            className="w-full bg-transparent text-sm text-[#f8f5ed] placeholder:text-[#8a93a1] outline-none"
+          />
+        </label>
+      </div>
+
       {/* Tagline visible on medium and larger screens */}
       <div className="hidden text-sm text-[#aab3c0] md:block">Everyday T-shirts. Nothing extra.</div>
       {/* Cart button showing current item count */}
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
        <button className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-[#f8f5ed] transition hover:bg-white/10"><ShoppingBag size={17}/> Cart ({cart})</button>
        <CustomerAuthPanel />
       </div>
+     </div>
+
+     <div className="mx-auto max-w-6xl px-5 pb-4 md:hidden">
+      <label className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-[#b7bfca] shadow-inner shadow-black/10">
+        <Search size={16} className="text-[#d8b36a]" />
+        <input
+          type="search"
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder="Search t-shirts"
+          aria-label="Search products"
+          className="w-full bg-transparent text-sm text-[#f8f5ed] placeholder:text-[#8a93a1] outline-none"
+        />
+      </label>
      </div>
     </header>
 
@@ -87,29 +143,35 @@ export default function Home(){
      {/* Section header with title and product count */}
      <div className="relative mb-7 flex items-end justify-center">
       <div className="text-center"><p className="text-sm font-bold uppercase tracking-[.2em] text-[#d8b36a]">Collection</p><h2 className="mt-1 text-3xl font-bold text-[#f8f5ed]">Best sellers</h2></div>
-      <p className="absolute bottom-0 right-0 text-sm text-[#aab3c0]">{products.length} styles</p>
+      <p className="absolute bottom-0 right-0 text-sm text-[#aab3c0]">{filteredProducts.length} styles</p>
      </div>
-     {/* Responsive grid: 2 cols mobile, 2 small, 4 large */}
-     <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
-      {products.map(p=><article key={p.id} className="group rounded-2xl border border-white/10 bg-[#151a22]/90 p-3 shadow-lg shadow-black/10">
-       {/* Link wrapping product image for navigation to product detail */}
-       <Link href={`/products/${p.id}`} className="block">
-        {/* Product image container with hover zoom and color badge overlay */}
-        <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#242b36] sm:aspect-[3/4]">
-         <img src={p.img} alt={p.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105"/>
-         {/* Color badge on top-left of the product image */}
-         <span className="absolute left-3 top-3 rounded-full border border-[#d8b36a]/20 bg-[#d8b36a]/15 px-3 py-1 text-xs font-bold text-[#e8d19a]">{p.color}</span>
-        </div>
-       </Link>
-       {/* Product info: name, available sizes, and price */}
-       <div className="flex items-start justify-between pt-4">
-        <div><h3 className="font-semibold text-[#f8f5ed]">{p.name}</h3><p className="mt-1 text-sm text-[#aab3c0]">S · M · L · XL · XXL</p></div>
-        <div className="text-right">{p.discount>0?<><p className="text-xs text-[#8f99a8] line-through">৳{p.price}</p><p className="font-bold text-[#d8b36a]">৳{getDiscountedPrice(p.price,p.discount)}</p><p className="mt-1 text-[10px] font-bold text-emerald-300">{p.discount}% off</p></>:<p className="font-bold text-[#d8b36a]">৳{p.price}</p>}</div>
+
+     {filteredProducts.length === 0 ? (
+       <div className="rounded-2xl border border-dashed border-white/15 bg-[#111827]/40 p-10 text-center text-[#b7bfca]">
+         No products found
        </div>
-       {/* "Order now" button linking to product detail page */}
-       <Link href={`/products/${p.id}`} className="mt-4 flex w-full items-center justify-center rounded-xl border border-[#d8b36a]/40 bg-[#d8b36a]/10 px-4 py-3 text-sm font-bold text-[#e8d19a] transition hover:border-[#d8b36a] hover:bg-[#d8b36a] hover:text-[#11141b]">Order now</Link>
-      </article>)}
-     </div>
+     ) : (
+       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
+        {filteredProducts.map(p=><article key={p.id} className="group rounded-2xl border border-white/10 bg-[#151a22]/90 p-3 shadow-lg shadow-black/10">
+         {/* Link wrapping product image for navigation to product detail */}
+         <Link href={`/products/${p.id}`} className="block">
+          {/* Product image container with hover zoom and color badge overlay */}
+          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#242b36] sm:aspect-[3/4]">
+           <img src={p.img} alt={p.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105"/>
+           {/* Color badge on top-left of the product image */}
+           <span className="absolute left-3 top-3 rounded-full border border-[#d8b36a]/20 bg-[#d8b36a]/15 px-3 py-1 text-xs font-bold text-[#e8d19a]">{p.color}</span>
+          </div>
+         </Link>
+         {/* Product info: name, available sizes, and price */}
+         <div className="flex items-start justify-between pt-4">
+          <div><h3 className="font-semibold text-[#f8f5ed]">{p.name}</h3><p className="mt-1 text-sm text-[#aab3c0]">S · M · L · XL · XXL</p></div>
+          <div className="text-right">{p.discount>0?<><p className="text-xs text-[#8f99a8] line-through">৳{p.price}</p><p className="font-bold text-[#d8b36a]">৳{getDiscountedPrice(p.price,p.discount)}</p><p className="mt-1 text-[10px] font-bold text-emerald-300">{p.discount}% off</p></>:<p className="font-bold text-[#d8b36a]">৳{p.price}</p>}</div>
+         </div>
+         {/* "Order now" button linking to product detail page */}
+         <Link href={`/products/${p.id}`} className="mt-4 flex w-full items-center justify-center rounded-xl border border-[#d8b36a]/40 bg-[#d8b36a]/10 px-4 py-3 text-sm font-bold text-[#e8d19a] transition hover:border-[#d8b36a] hover:bg-[#d8b36a] hover:text-[#11141b]">Order now</Link>
+        </article>)}
+       </div>
+     )}
      {/* View All button - centered below the grid */}
      <div className="mt-8 flex justify-center">
       <Link href="/products" className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#d8b36a] to-[#b9873e] px-8 py-4 text-sm font-bold text-[#11141b] shadow-lg shadow-[#d8b36a]/20 transition hover:from-[#e5c57e] hover:to-[#c89a50] min-w-[200px]">
