@@ -107,7 +107,7 @@ export default function Home() {
             <nav className="hidden items-center gap-7 text-sm font-medium md:flex">
               <Link href="/" className="nav-link">Home</Link>
               <Link href="/products" className="nav-link">Collection</Link>
-              <Link href="/products" className="nav-link">New Arrivals</Link>
+              <Link href="/products?filter=new-arrivals" className="nav-link">New Arrivals</Link>
             </nav>
 
             <div className="hidden flex-1 justify-center md:flex">

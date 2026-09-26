@@ -14,6 +14,7 @@ export type Product = {
   images: string[];
   description: string;
   category: string; // 'T-Shirts', 'Shirts', or 'Hoodies'
+  createdAt?: string;
   sizeStock?: Record<Size, number>;
   status?: string;
 };
@@ -126,6 +127,7 @@ export function addProduct(productData: Omit<Product, 'id'>): Product {
   const newProduct: Product = {
     ...productData,
     id: nextId++,
+    createdAt: productData.createdAt || new Date().toISOString(),
   };
   products = [...products, newProduct];
   saveProducts(products); // Persist to localStorage

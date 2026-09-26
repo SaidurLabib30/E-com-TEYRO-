@@ -265,7 +265,8 @@ function addProduct(productData) {
     refreshProductsFromStorage();
     const newProduct = {
         ...productData,
-        id: nextId++
+        id: nextId++,
+        createdAt: productData.createdAt || new Date().toISOString()
     };
     products = [
         ...products,

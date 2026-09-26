@@ -4,9 +4,13 @@ import { ShoppingBag } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getDiscountedPrice, getProducts, subscribe } from '../product-store';
 
+const NEW_ARRIVAL_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
+
 export default function ProductsPage() {
   const [products, setProducts] = useState(getProducts());
   const [activeCategory, setActiveCategory] = useState('all');
+  const [newArrivalOnly, setNewArrivalOnly] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const updateProducts = () => setProducts(getProducts());
@@ -15,7 +19,38 @@ export default function ProductsPage() {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    setNewArrivalOnly(new URLSearchParams(window.location.search).get('filter') === 'new-arrivals');
+  }, []);
+
+  useEffect(() => {
+    if (!newArrivalOnly) return;
+
+    const currentTime = Date.now();
+    const nextExpiration = products.reduce((earliest, product) => {
+      const createdAt = Date.parse(product.createdAt ?? '');
+      if (!Number.isFinite(createdAt)) return earliest;
+
+      const expiration = createdAt + NEW_ARRIVAL_WINDOW_MS;
+      return expiration > currentTime ? Math.min(earliest, expiration) : earliest;
+    }, Number.POSITIVE_INFINITY);
+
+    if (!Number.isFinite(nextExpiration)) return;
+
+    const timeoutId = window.setTimeout(
+      () => setNow(Date.now()),
+      Math.max(0, nextExpiration - currentTime) + 1,
+    );
+    return () => window.clearTimeout(timeoutId);
+  }, [newArrivalOnly, now, products]);
+
   const filteredProducts = products.filter((p) => {
+    if (newArrivalOnly) {
+      const createdAt = Date.parse(p.createdAt ?? '');
+      if (!Number.isFinite(createdAt) || createdAt > now || now - createdAt >= NEW_ARRIVAL_WINDOW_MS) {
+        return false;
+      }
+    }
     if (activeCategory === 'all') return true;
     if (activeCategory === 'tshirt') return p.category === 'T-Shirts';
     if (activeCategory === 'shirt') return p.category === 'Shirts';
@@ -56,7 +91,9 @@ export default function ProductsPage() {
           <div className="mb-10">
             <p className="section-kicker">Collection</p>
             <h1 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white md:text-5xl">
-              {activeCategory === 'all'
+              {newArrivalOnly
+                ? 'New Arrivals'
+                : activeCategory === 'all'
                 ? 'All categories'
                 : activeCategory === 'tshirt'
                   ? 'All T-Shirts'
@@ -65,7 +102,7 @@ export default function ProductsPage() {
                     : 'All Hoodies'}
             </h1>
             <p className="mt-3 max-w-xl text-base leading-7 text-[#bec8d6]">
-              {filteredProducts.length} styles available. Pick your everyday favorite and order directly.
+              {filteredProducts.length} {newArrivalOnly ? 'new arrivals' : 'styles available'}. Pick your everyday favorite and order directly.
             </p>
           </div>
 
@@ -86,42 +123,48 @@ export default function ProductsPage() {
             ))}
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            {filteredProducts.map((p) => (
-              <article key={p.id} className="product-card group">
-                <Link href={`/products/${p.id}`} className="block">
-                  <div className="relative aspect-[4/5] overflow-hidden bg-[#1b2430]">
-                    <img src={p.img} alt={p.name} className="h-full w-full object-cover" />
-                    <span className="product-card-badge">{p.color}</span>
-                  </div>
-                </Link>
-
-                <div className="space-y-4 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-bold text-white">{p.name}</h3>
-                      <p className="mt-1 text-sm text-[#9aa5b5]">S · M · L · XL · XXL</p>
+          {newArrivalOnly && filteredProducts.length === 0 ? (
+            <div className="glass-panel rounded-3xl p-10 text-center text-[#c7d0dd]">
+              No products were added in the last 14 days.
+            </div>
+          ) : (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+              {filteredProducts.map((p) => (
+                <article key={p.id} className="product-card group">
+                  <Link href={`/products/${p.id}`} className="block">
+                    <div className="relative aspect-[4/5] overflow-hidden bg-[#1b2430]">
+                      <img src={p.img} alt={p.name} className="h-full w-full object-cover" />
+                      <span className="product-card-badge">{p.color}</span>
                     </div>
-                    <div className="text-right">
-                      {p.discount > 0 ? (
-                        <>
-                          <p className="text-xs text-[#7f8aa0] line-through">৳{p.price}</p>
-                          <p className="font-black text-[#e8c27d]">৳{getDiscountedPrice(p.price, p.discount)}</p>
-                          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7ee7b3]">{p.discount}% off</p>
-                        </>
-                      ) : (
-                        <p className="font-black text-[#e8c27d]">৳{p.price}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <Link href={`/products/${p.id}`} className="button-primary flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-bold">
-                    Order now
                   </Link>
-                </div>
-              </article>
-            ))}
-          </div>
+
+                  <div className="space-y-4 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-white">{p.name}</h3>
+                        <p className="mt-1 text-sm text-[#9aa5b5]">S · M · L · XL · XXL</p>
+                      </div>
+                      <div className="text-right">
+                        {p.discount > 0 ? (
+                          <>
+                            <p className="text-xs text-[#7f8aa0] line-through">৳{p.price}</p>
+                            <p className="font-black text-[#e8c27d]">৳{getDiscountedPrice(p.price, p.discount)}</p>
+                            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7ee7b3]">{p.discount}% off</p>
+                          </>
+                        ) : (
+                          <p className="font-black text-[#e8c27d]">৳{p.price}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <Link href={`/products/${p.id}`} className="button-primary flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-bold">
+                      Order now
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
