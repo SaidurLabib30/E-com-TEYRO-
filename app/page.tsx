@@ -1,24 +1,18 @@
 'use client';
-// State management and side effects
 import { useEffect, useState } from 'react';
-
-// Client-side navigation
 import Link from 'next/link';
-
-// Icons from lucide-react library
-import { Search, ShoppingBag } from 'lucide-react';
+import { Search, ShoppingBag, ArrowRight, ArrowLeft } from 'lucide-react';
 import { CustomerAuthPanel, CustomerDashboard } from './customer-account';
-
-// Product store - shared between admin and public pages
 import { getDiscountedPrice, getProducts, subscribe } from './product-store';
+import ImageStreamHero from '@/components/ui/image-stream-hero';
 
-// Main homepage: customer dashboard with hero section and product grid
-export default function Home(){
-  // Track cart item count from localStorage
-  const [cart,setCart]=useState(0);
-  // Product catalog state - synced with the shared product store
-  const [products,setProducts]=useState(getProducts());
-  const [searchTerm,setSearchTerm]=useState('');
+const discountReturnKey = 'teyro_discount_product_return';
+
+export default function Home() {
+  const [cart, setCart] = useState(0);
+  const [products, setProducts] = useState(getProducts());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDiscountedOnly, setShowDiscountedOnly] = useState(false);
 
   const normalizeSearchText = (value: string) =>
     value.toLowerCase().replace(/[-_\s]+/g, '').replace(/&/g, 'and');
@@ -44,144 +38,249 @@ export default function Home(){
 
     return category.includes(normalizedTerm);
   });
+  const visibleProducts = showDiscountedOnly
+    ? filteredProducts.filter((product) => product.discount > 0)
+    : filteredProducts;
 
-  // Sync cart count from localStorage on mount and listen for cart update events
-  useEffect(()=>{
-   // Read cart count from localStorage and update state
-   const syncCart=()=>setCart(Number(window.localStorage.getItem('thread-cart')||0));
-   // Re-sync cart when custom event is dispatched from other pages
-   const syncUpdated=()=>syncCart();
-   syncCart();
-   window.addEventListener('thread-cart-updated',syncUpdated);
-   // Remove event listener when component unmounts
-   return ()=>window.removeEventListener('thread-cart-updated',syncUpdated);
-  },[]);
+  const toggleDiscountedProducts = () => {
+    setShowDiscountedOnly((current) => !current);
+    window.requestAnimationFrame(() => {
+      document.getElementById('collection')?.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      });
+    });
+  };
 
-  // Subscribe to product store changes so new products appear immediately
-  useEffect(()=>{
-   const updateProducts=()=>setProducts(getProducts());
-   const unsubscribe=subscribe(updateProducts);
-   // Initial fetch in case products changed before subscription
-   updateProducts();
-   return unsubscribe;
-  },[]);
+  const markDiscountProductNavigation = () => {
+    if (showDiscountedOnly) {
+      window.sessionStorage.setItem(discountReturnKey, 'true');
+    }
+  };
+
+  useEffect(() => {
+    const syncCart = () => setCart(Number(window.localStorage.getItem('thread-cart') || 0));
+    const syncUpdated = () => syncCart();
+    syncCart();
+    window.addEventListener('thread-cart-updated', syncUpdated);
+    return () => window.removeEventListener('thread-cart-updated', syncUpdated);
+  }, []);
+
+  useEffect(() => {
+    const updateProducts = () => setProducts(getProducts());
+    const unsubscribe = subscribe(updateProducts);
+    updateProducts();
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const resetDiscountReturn = () => {
+      const cameFromDiscount =
+        new URLSearchParams(window.location.search).get('from') === 'discount' ||
+        window.sessionStorage.getItem(discountReturnKey) === 'true';
+      if (!cameFromDiscount) return;
+
+      window.sessionStorage.removeItem(discountReturnKey);
+      setShowDiscountedOnly(false);
+      window.history.replaceState(window.history.state, '', window.location.pathname);
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    };
+
+    resetDiscountReturn();
+    window.addEventListener('pageshow', resetDiscountReturn);
+    window.addEventListener('popstate', resetDiscountReturn);
+    return () => {
+      window.removeEventListener('pageshow', resetDiscountReturn);
+      window.removeEventListener('popstate', resetDiscountReturn);
+    };
+  }, []);
 
   return (
-   <main className="customer-dashboard min-h-screen">
-    <div className="customer-upper-section">
-    {/* Sticky header with logo, tagline, and cart button */}
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0d1017]/90 backdrop-blur">
-     <div className="mx-auto flex max-w-6xl items-center gap-3 px-5 py-5">
-      {/* Brand logo with gold accent color */}
-      <div className="flex items-center gap-2.5">
-      <span className="brand-logo inline-flex items-center justify-center w-8 h-8 rounded-lg text-[#11141b] font-black text-sm">T</span>
-      <span className="brand-name text-xl font-black tracking-[.22em]">TEYRO</span>
-     </div>
+    <main className="customer-dashboard min-h-screen text-[#f5f5f4]">
+      <div className="customer-upper-section">
+        <header className="SiteHeader">
+          <div className="mx-auto flex max-w-7xl items-center gap-3 px-5 py-4 lg:px-8">
+            <Link href="/" className="flex items-center gap-2.5">
+              <span className="brand-logo inline-flex h-9 w-9 items-center justify-center rounded-xl text-sm">T</span>
+              <span className="brand-name text-lg font-black tracking-[0.22em]">TEYRO</span>
+            </Link>
 
-      {/* Search bar visible on large screens and centered in the header */}
-      <div className="hidden flex-1 justify-center md:flex">
-        <label className="flex w-full max-w-md items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-[#b7bfca] shadow-inner shadow-black/10">
-          <Search size={16} className="text-[#d8b36a]" />
-          <input
-            type="search"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search t-shirts"
-            aria-label="Search products"
-            className="w-full bg-transparent text-sm text-[#f8f5ed] placeholder:text-[#8a93a1] outline-none"
-          />
-        </label>
+            <nav className="hidden items-center gap-7 text-sm font-medium md:flex">
+              <Link href="/" className="nav-link">Home</Link>
+              <Link href="/products" className="nav-link">Collection</Link>
+              <Link href="/products" className="nav-link">New Arrivals</Link>
+            </nav>
+
+            <div className="hidden flex-1 justify-center md:flex">
+              <label className="flex w-full max-w-md items-center gap-2 rounded-full border border-white/10 bg-white/3 px-4 py-2.5 text-[#d1d6df] shadow-inner shadow-black/10">
+                <Search size={16} className="text-[#e8c27d]" />
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search T-shirts"
+                  aria-label="Search products"
+                  className="w-full bg-transparent text-sm text-[#f5f5f4] placeholder:text-[#8e97a5] outline-none"
+                />
+              </label>
+            </div>
+
+            <div className="ml-auto flex items-center gap-2.5">
+              <button className="button-secondary hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold md:inline-flex">
+                <ShoppingBag size={16} /> Cart ({cart})
+              </button>
+              <CustomerAuthPanel />
+            </div>
+          </div>
+
+          <div className="mx-auto max-w-7xl px-5 pb-4 md:hidden">
+            <label className="flex items-center gap-2 rounded-full border border-white/10 bg-white/3 px-4 py-2.5 text-[#d1d6df] shadow-inner shadow-black/10">
+              <Search size={16} className="text-[#e8c27d]" />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search T-shirts"
+                aria-label="Search products"
+                className="w-full bg-transparent text-sm text-[#f5f5f4] placeholder:text-[#8e97a5] outline-none"
+              />
+            </label>
+          </div>
+        </header>
+
+        <section className="relative mx-auto max-w-7xl px-5 pb-16 pt-8 md:px-8 lg:pb-20 lg:pt-12">
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+            <div className="section-kicker">New season / 2026</div>
+            <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/3 px-3 py-1.5 text-xs font-medium text-[#d9dfeb]">
+              <span className="inline-flex h-2 w-2 rounded-full bg-[#7ee7b3]" />
+              Free shipping in Dhaka on orders above ৳1,500
+            </div>
+          </div>
+
+          <ImageStreamHero
+            images={products.map((product) => ({
+              src: product.img,
+              alt: product.name,
+            }))}
+            cards={7}
+            speed={18}
+            axis={56}
+            imageArea={{ top: '28%', bottom: '28%' }}
+            className="min-h-[680px] w-full rounded-3xl border-2 border-[#e8c27d]/70 bg-[#0d1117] shadow-[0_0_36px_rgba(232,194,125,0.12)] sm:min-h-[640px] lg:min-h-[620px]"
+          >
+            <div className="pointer-events-none absolute inset-0 bg-[#080b10]/65" />
+            <div className="dusing-content relative z-10 flex min-h-[680px] w-full flex-col items-center justify-between gap-12 px-6 pt-10 pb-6 text-center sm:min-h-[640px] sm:px-10 sm:pt-12 sm:pb-8 lg:min-h-[620px] lg:px-16">
+              <div className="w-full space-y-5">
+                <span className="inline-flex rounded-full border border-[#e8c27d]/40 bg-[#0d1117]/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#efd49a]">
+                  Everyday essentials
+                </span>
+                <h1 className="mx-auto max-w-4xl text-xl font-black leading-tight text-white sm:text-3xl lg:text-4xl">
+                  Total comfort.
+                  <span className="block text-[#e8c27d]">Made to wear daily.</span>
+                </h1>
+              </div>
+
+              <div className="w-full max-w-2xl space-y-6">
+                <p className="mx-auto text-sm leading-7 text-[#e0e4eb] sm:text-base">
+                  Thoughtful everyday staples with premium feel, soft fabric, and a smarter fit for whatever your day brings.
+                </p>
+                <div className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
+                  <Link href="/products" className="button-primary inline-flex w-full max-w-[240px] items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold sm:w-auto">
+                    Shop collection <ArrowRight size={16} />
+                  </Link>
+                  <button
+                    type="button"
+                    aria-pressed={showDiscountedOnly}
+                    onClick={toggleDiscountedProducts}
+                    className="button-primary inline-flex w-full max-w-[240px] items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold sm:w-auto"
+                  >
+                    Discount
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ImageStreamHero>
+        </section>
       </div>
-
-      {/* Tagline visible on medium and larger screens */}
-      <div className="hidden text-sm text-[#aab3c0] md:block">Everyday T-shirts. Nothing extra.</div>
-      {/* Cart button showing current item count */}
-      <div className="ml-auto flex items-center gap-2">
-       <button className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-[#f8f5ed] transition hover:bg-white/10"><ShoppingBag size={17}/> Cart ({cart})</button>
-       <CustomerAuthPanel />
-      </div>
-     </div>
-
-     <div className="mx-auto max-w-6xl px-5 pb-4 md:hidden">
-      <label className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-[#b7bfca] shadow-inner shadow-black/10">
-        <Search size={16} className="text-[#d8b36a]" />
-        <input
-          type="search"
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
-          placeholder="Search t-shirts"
-          aria-label="Search products"
-          className="w-full bg-transparent text-sm text-[#f8f5ed] placeholder:text-[#8a93a1] outline-none"
-        />
-      </label>
-     </div>
-    </header>
-
-    {/* Hero section: collection announcement, headline, description, and CTA */}
-    <section className="relative mx-auto max-w-6xl px-5 pb-16 pt-16 md:pb-20 md:pt-24">
-     {/* Decorative glow behind hero content */}
-     <div className="pointer-events-none absolute top-0 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-[#d8b36a]/5 blur-[100px]"></div>
-    <div className="relative">
-    <div className="max-w-3xl">
-      {/* Collection label in uppercase with letter spacing */}
-      <p className="mb-5 text-xs font-bold uppercase tracking-[.25em] text-[#d8b36a]">New collection · 2026</p>
-      {/* Main headline with gold accent word and responsive sizing */}
-      <h1 className="text-5xl font-black leading-[.95] tracking-tight text-[#f8f5ed] md:text-8xl"><span className="text-[#d8b36a]">T-shirts</span> made<br/>to wear daily.</h1>
-      {/* Subtitle describing the value proposition */}
-      <p className="mt-7 max-w-xl text-base leading-7 text-[#b7bfca] md:text-lg">Clean fits, comfortable fabric and simple colors. Pick your favorite and order directly — no account required.</p>
-       {/* Call-to-action button linking to the all products page */}
-       <Link href="/products" className="mt-8 flex items-center justify-center rounded-full bg-gradient-to-r from-[#d8b36a] to-[#b9873e] px-6 py-3.5 text-sm font-bold text-[#11141b] shadow-lg shadow-[#d8b36a]/20 transition hover:from-[#e5c57e] hover:to-[#c89a50]">All Categories</Link>
-    </div>
-    </div>
-    </section>
 
       <CustomerDashboard />
-    </div>
 
-    {/* Product collection grid section */}
-    <section className="mx-auto max-w-6xl px-5 pb-24 pt-10 md:pt-14">
-     {/* Section header with title and product count */}
-     <div className="relative mb-7 flex items-end justify-center">
-      <div className="text-center"><p className="text-sm font-bold uppercase tracking-[.2em] text-[#d8b36a]">Collection</p><h2 className="mt-1 text-3xl font-bold text-[#f8f5ed]">Best sellers</h2></div>
-      <p className="absolute bottom-0 right-0 text-sm text-[#aab3c0]">{filteredProducts.length} styles</p>
-     </div>
-
-     {filteredProducts.length === 0 ? (
-       <div className="rounded-2xl border border-dashed border-white/15 bg-[#111827]/40 p-10 text-center text-[#b7bfca]">
-         No products found
-       </div>
-     ) : (
-       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
-        {filteredProducts.map(p=><article key={p.id} className="group rounded-2xl border border-white/10 bg-[#151a22]/90 p-3 shadow-lg shadow-black/10">
-         {/* Link wrapping product image for navigation to product detail */}
-         <Link href={`/products/${p.id}`} className="block">
-          {/* Product image container with hover zoom and color badge overlay */}
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#242b36] sm:aspect-[3/4]">
-           <img src={p.img} alt={p.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105"/>
-           {/* Color badge on top-left of the product image */}
-           <span className="absolute left-3 top-3 rounded-full border border-[#d8b36a]/20 bg-[#d8b36a]/15 px-3 py-1 text-xs font-bold text-[#e8d19a]">{p.color}</span>
+      <section id="collection" className="mx-auto max-w-7xl px-5 pb-24 pt-16 md:px-8">
+        <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="section-kicker">Collection</p>
+            <h2 className="mt-2 text-3xl font-black tracking-[-0.04em] text-white md:text-4xl">
+              {showDiscountedOnly ? 'Discounted products' : 'Best sellers'}
+            </h2>
           </div>
-         </Link>
-         {/* Product info: name, available sizes, and price */}
-         <div className="flex items-start justify-between pt-4">
-          <div><h3 className="font-semibold text-[#f8f5ed]">{p.name}</h3><p className="mt-1 text-sm text-[#aab3c0]">S · M · L · XL · XXL</p></div>
-          <div className="text-right">{p.discount>0?<><p className="text-xs text-[#8f99a8] line-through">৳{p.price}</p><p className="font-bold text-[#d8b36a]">৳{getDiscountedPrice(p.price,p.discount)}</p><p className="mt-1 text-[10px] font-bold text-emerald-300">{p.discount}% off</p></>:<p className="font-bold text-[#d8b36a]">৳{p.price}</p>}</div>
-         </div>
-         {/* "Order now" button linking to product detail page */}
-         <Link href={`/products/${p.id}`} className="mt-4 flex w-full items-center justify-center rounded-xl border border-[#d8b36a]/40 bg-[#d8b36a]/10 px-4 py-3 text-sm font-bold text-[#e8d19a] transition hover:border-[#d8b36a] hover:bg-[#d8b36a] hover:text-[#11141b]">Order now</Link>
-        </article>)}
-       </div>
-     )}
-     {/* View All button - centered below the grid */}
-     <div className="mt-8 flex justify-center">
-      <Link href="/products" className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#d8b36a] to-[#b9873e] px-8 py-4 text-sm font-bold text-[#11141b] shadow-lg shadow-[#d8b36a]/20 transition hover:from-[#e5c57e] hover:to-[#c89a50] min-w-[200px]">
-       View All
-      </Link>
-     </div>
-    </section>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/2 px-3 py-1.5 text-sm text-[#c7d0dd]">
+              {visibleProducts.length} {showDiscountedOnly ? 'discounted styles' : 'styles available'}
+            </div>
+            {showDiscountedOnly && (
+              <button
+                type="button"
+                onClick={() => window.location.assign('/')}
+                className="button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
+              >
+                <ArrowLeft size={16} /> Back
+              </button>
+            )}
+          </div>
+        </div>
 
-    {/* Footer with copyright */}
-    <footer className="border-t border-white/10 px-5 py-8 text-center text-xs text-[#8f99a8]">© 2026 Teyro. Simple T-shirts, simple shopping.</footer>
-   </main>
+        {visibleProducts.length === 0 ? (
+          <div className="glass-panel rounded-3xl p-10 text-center text-[#c7d0dd]">
+            {showDiscountedOnly ? 'No discounted products found' : 'No products found'}
+          </div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            {visibleProducts.map((p) => (
+              <article key={p.id} className="product-card group">
+                <Link href={`/products/${p.id}${showDiscountedOnly ? '?from=discount' : ''}`} onClick={markDiscountProductNavigation} className="block">
+                  <div className="relative aspect-[4/5] overflow-hidden bg-[#1b2430]">
+                    <img src={p.img} alt={p.name} className="absolute inset-0 m-auto h-[88%] w-[88%] object-cover" />
+                    <span className="product-card-badge">{p.color}</span>
+                  </div>
+                </Link>
+
+                <div className="space-y-4 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">{p.name}</h3>
+                      <p className="mt-1 text-sm text-[#9aa5b5]">S · M · L · XL · XXL</p>
+                    </div>
+                    <div className="text-right">
+                      {p.discount > 0 ? (
+                        <>
+                          <p className="text-xs text-[#7c8697] line-through">৳{p.price}</p>
+                          <p className="font-black text-[#e8c27d]">৳{getDiscountedPrice(p.price, p.discount)}</p>
+                          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7ee7b3]">{p.discount}% off</p>
+                        </>
+                      ) : (
+                        <p className="font-black text-[#e8c27d]">৳{p.price}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <Link href={`/products/${p.id}${showDiscountedOnly ? '?from=discount' : ''}`} onClick={markDiscountProductNavigation} className="button-primary flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-bold">
+                    Order now
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-10 flex justify-center">
+          <Link href="/products" className="button-primary inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-bold">
+            View all styles <ArrowRight size={16} />
+          </Link>
+        </div>
+      </section>
+
+      <footer className="border-t border-white/8 px-5 py-8 text-center text-xs uppercase tracking-[0.18em] text-[#99a4b5]">
+        © 2026 Teyro. Everyday essentials.
+      </footer>
+    </main>
   );
 }

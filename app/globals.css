@@ -1,57 +1,192 @@
-/* Import Tailwind CSS framework */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-/* CSS custom properties for background and text colors */
-:root { --bg:#f8f7f4; --ink:#171717; --brand-color:#d8b36a; }
+:root {
+  --bg: #0b0d12;
+  --bg-soft: #121821;
+  --panel: rgba(17, 23, 31, 0.8);
+  --panel-strong: #161d2a;
+  --panel-alt: #1a2230;
+  --line: rgba(255,255,255,0.08);
+  --text: #f5f5f4;
+  --muted: #c5ccd7;
+  --muted-strong: #9aa5b5;
+  --brand: #e8c27d;
+  --brand-strong: #d39a44;
+  --brand-soft: rgba(232, 194, 125, 0.14);
+  --green: #7ee7b3;
+  --shadow: rgba(7, 10, 14, 0.45);
+}
 
-/* Apply border-box sizing to all elements for consistent box model */
-* { box-sizing:border-box; }
+* { box-sizing: border-box; }
 
-/* Base body styles: reset margin, set background and font */
-body { margin:0; background:var(--bg); color:var(--ink); font-family:Arial, Helvetica, sans-serif; }
+html { scroll-behavior: smooth; }
 
-/* Ensure all buttons show a pointer cursor for interactivity */
-button { cursor:pointer; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(232, 194, 125, 0.12), transparent 30%),
+    radial-gradient(circle at 80% 0%, rgba(98, 117, 154, 0.14), transparent 28%),
+    linear-gradient(180deg, #0b0d12 0%, #0f1720 100%);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+}
 
-/* Customer dashboard layout: dark theme with radial gradient overlays for visual depth */
+.dusing-content {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+}
+
+img { display: block; max-width: 100%; }
+
+a { text-decoration: none; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+
 .customer-dashboard {
- min-height:100vh;
- color-scheme:dark;
- background:
-  radial-gradient(circle at 12% -10%, rgba(216,179,106,.16), transparent 32rem),
-  radial-gradient(circle at 90% 15%, rgba(95,122,160,.14), transparent 30rem),
-  linear-gradient(180deg,#10151f 0%,#0b0e14 100%);
+  min-height: 100vh;
+  color-scheme: dark;
+  background: linear-gradient(180deg, #0b0d12 0%, #111821 100%);
 }
 
-/* Separate the premium upper customer area from the unchanged collection background */
 .customer-upper-section {
- background:
-  radial-gradient(circle at 78% 18%, rgba(95,122,160,.16), transparent 26rem),
-  linear-gradient(180deg,#172f4d 0%,#0f1f35 100%);
- border-bottom:1px solid rgba(216,179,106,.18);
+  background:
+    radial-gradient(circle at top right, rgba(232, 194, 125, 0.12), transparent 26%),
+    linear-gradient(180deg, rgba(18, 24, 33, 0.96), rgba(10, 13, 18, 0.92));
+  border-bottom: 1px solid var(--line);
 }
 
-/* Admin dashboard layout: dark theme with cyan/emerald gradient overlays */
 .admin-dashboard {
- min-height:100vh;
- color-scheme:dark;
- background:
-  radial-gradient(circle at 8% -10%, rgba(34,211,238,.14), transparent 30rem),
-  radial-gradient(circle at 92% 8%, rgba(52,211,153,.10), transparent 32rem),
-  linear-gradient(180deg,#0b1220 0%,#080d18 100%);
+  min-height: 100vh;
+  color-scheme: dark;
+  background:
+    radial-gradient(circle at 5% 0%, rgba(45, 212, 191, 0.12), transparent 26%),
+    radial-gradient(circle at 95% 10%, rgba(168, 85, 247, 0.10), transparent 22%),
+    linear-gradient(180deg, #0b1220 0%, #0a0f18 100%);
 }
 
-/* Shared brand treatment keeps each dashboard's logo and brand name aligned */
-.brand-logo { background:var(--brand-color); }
+.brand-logo {
+  background: linear-gradient(135deg, var(--brand) 0%, #f7dca2 100%);
+  color: #11141b;
+  font-weight: 900;
+  box-shadow: 0 10px 26px rgba(232, 194, 125, 0.22);
+}
+
 .brand-name {
- background:var(--brand-color);
- background-clip:text;
- -webkit-background-clip:text;
- color:transparent;
+  background: linear-gradient(135deg, #f7dca2 0%, #d7a657 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
-/* Ensure dropdown options in admin panel are readable against dark backgrounds */
+.logo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+}
+
+.SiteHeader {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(18px);
+  background: rgba(11, 13, 18, 0.72);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nav-link {
+  color: var(--muted);
+  transition: color 180ms ease;
+}
+
+.nav-link:hover { color: var(--text); }
+
+.button-primary {
+  border: 1px solid rgba(232, 194, 125, 0.25);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
+  color: #12161b;
+  box-shadow: 0 18px 40px rgba(232, 194, 125, 0.2);
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.button-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+.button-secondary {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  color: var(--text);
+}
+
+.button-secondary:hover {
+  border-color: rgba(232, 194, 125, 0.4);
+  background: rgba(232, 194, 125, 0.06);
+}
+
+.section-kicker {
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--brand);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.fine-text { color: var(--muted-strong); }
+
+.product-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.6rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(15, 18, 24, 0.92);
+  box-shadow: 0 18px 40px rgba(7,10,14,0.28);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(232, 194, 125, 0.38);
+  box-shadow: 0 24px 48px rgba(7,10,14,0.45);
+}
+
+.product-card img {
+  transition: transform 300ms ease;
+}
+
+.product-card:hover img { transform: scale(1.04); }
+
+.product-card-badge {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(232, 194, 125, 0.22);
+  background: rgba(8, 12, 18, 0.62);
+  padding: 0.45rem 0.75rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.glass-panel {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(18, 24, 31, 0.9);
+  box-shadow: 0 24px 52px rgba(7,10,14,0.28);
+}
+
 .admin-dashboard select option {
- background:#0f172a;
- color:#e2e8f0;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .section-kicker {
+    letter-spacing: 0.18em;
+  }
 }
