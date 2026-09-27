@@ -132,7 +132,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mx-auto max-w-7xl px-5 pb-4 md:hidden">
+          <div className="mx-auto max-w-7xl px-5 pt-4 pb-0 md:hidden">
             <label className="flex items-center gap-2 rounded-full border border-white/10 bg-white/3 px-4 py-2.5 text-[#d1d6df] shadow-inner shadow-black/10">
               <Search size={16} className="text-[#e8c27d]" />
               <input
@@ -147,8 +147,8 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="relative mx-auto max-w-7xl px-5 pb-16 pt-8 md:px-8 lg:pb-20 lg:pt-12">
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <section className="relative mx-auto flex max-w-7xl flex-col px-5 pb-8 pt-2 md:px-8 md:pb-16 md:pt-8 lg:pb-20 lg:pt-12">
+          <div className="order-1 mb-4 flex flex-wrap items-center justify-between gap-4 md:mb-8 md:mt-0">
             <div className="section-kicker">New season / 2026</div>
             <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/3 px-3 py-1.5 text-xs font-medium text-[#d9dfeb]">
               <span className="inline-flex h-2 w-2 rounded-full bg-[#7ee7b3]" />
@@ -164,12 +164,14 @@ export default function Home() {
             cards={7}
             speed={18}
             axis={56}
+            mobileAxis={52}
+            mobileCardScale={1}
             imageArea={{ top: '28%', bottom: '28%' }}
-            className="min-h-[680px] w-full rounded-3xl border-2 border-[#e8c27d]/70 bg-[#0d1117] shadow-[0_0_36px_rgba(232,194,125,0.12)] sm:min-h-[640px] lg:min-h-[620px]"
+            className="order-1 min-h-[500px] w-full rounded-3xl border-2 border-[#e8c27d]/70 bg-[#0d1117] shadow-[0_0_36px_rgba(232,194,125,0.12)] sm:min-h-[640px] md:order-2 lg:min-h-[620px]"
           >
             <div className="pointer-events-none absolute inset-0 bg-[#080b10]/65" />
-            <div className="dusing-content relative z-10 flex min-h-[680px] w-full flex-col items-center justify-between gap-12 px-6 pt-10 pb-6 text-center sm:min-h-[640px] sm:px-10 sm:pt-12 sm:pb-8 lg:min-h-[620px] lg:px-16">
-              <div className="w-full space-y-5">
+            <div className="dusing-content relative z-10 flex min-h-[500px] w-full flex-col items-center justify-between gap-8 px-5 pt-8 pb-3 text-center sm:min-h-[640px] sm:gap-12 sm:px-10 sm:pt-12 sm:pb-8 lg:min-h-[620px] lg:px-16">
+              <div className="mt-3 w-full space-y-5 sm:mt-0">
                 <span className="inline-flex rounded-full border border-[#e8c27d]/40 bg-[#0d1117]/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#efd49a]">
                   Everyday essentials
                 </span>
@@ -179,19 +181,19 @@ export default function Home() {
                 </h1>
               </div>
 
-              <div className="w-full max-w-2xl space-y-6">
+              <div className="w-full max-w-2xl space-y-3 sm:space-y-6">
                 <p className="mx-auto text-sm leading-7 text-[#e0e4eb] sm:text-base">
                   Thoughtful everyday staples with premium feel, soft fabric, and a smarter fit for whatever your day brings.
                 </p>
-                <div className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
-                  <Link href="/products" className="button-primary inline-flex w-full max-w-[240px] items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold sm:w-auto">
+                <div className="flex w-full flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
+                  <Link href="/products" className="button-primary inline-flex w-full max-w-[200px] items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-bold sm:w-auto sm:max-w-[240px] sm:gap-2 sm:px-6 sm:py-3 sm:text-sm">
                     Shop collection <ArrowRight size={16} />
                   </Link>
                   <button
                     type="button"
                     aria-pressed={showDiscountedOnly}
                     onClick={toggleDiscountedProducts}
-                    className="button-primary inline-flex w-full max-w-[240px] items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold sm:w-auto"
+                    className="button-primary inline-flex w-full max-w-[160px] items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-bold sm:w-auto sm:max-w-[240px] sm:gap-2 sm:px-6 sm:py-3 sm:text-sm"
                   >
                     Discount
                   </button>
@@ -233,7 +235,7 @@ export default function Home() {
             {showDiscountedOnly ? 'No discounted products found' : 'No products found'}
           </div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
             {visibleProducts.map((p) => (
               <article key={p.id} className="product-card group">
                 <Link href={`/products/${p.id}${showDiscountedOnly ? '?from=discount' : ''}`} onClick={markDiscountProductNavigation} className="block">
@@ -243,11 +245,11 @@ export default function Home() {
                   </div>
                 </Link>
 
-                <div className="space-y-4 p-4">
-                  <div className="flex items-start justify-between gap-3">
+                <div className="space-y-3 p-3 sm:space-y-4 sm:p-4">
+                  <div className="flex items-start justify-between gap-2 sm:gap-3">
                     <div>
-                      <h3 className="text-lg font-bold text-white">{p.name}</h3>
-                      <p className="mt-1 text-sm text-[#9aa5b5]">S · M · L · XL · XXL</p>
+                      <h3 className="text-sm font-bold text-white sm:text-lg">{p.name}</h3>
+                      <p className="mt-1 text-xs text-[#9aa5b5] sm:text-sm">S · M · L · XL · XXL</p>
                     </div>
                     <div className="text-right">
                       {p.discount > 0 ? (
@@ -262,7 +264,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <Link href={`/products/${p.id}${showDiscountedOnly ? '?from=discount' : ''}`} onClick={markDiscountProductNavigation} className="button-primary flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-bold">
+                  <Link href={`/products/${p.id}${showDiscountedOnly ? '?from=discount' : ''}`} onClick={markDiscountProductNavigation} className="button-primary flex w-full items-center justify-center rounded-full px-2 py-2.5 text-xs font-bold sm:px-4 sm:py-3 sm:text-sm">
                     Order now
                   </Link>
                 </div>

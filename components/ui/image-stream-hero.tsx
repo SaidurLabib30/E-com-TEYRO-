@@ -122,6 +122,10 @@ export type ImageStreamHeroProps = {
   speed?: number;
   axis?: number;
   path?: CorridorPath;
+  /** Vertical card position for containers at or below 640px. */
+  mobileAxis?: number;
+  /** Relative card size for containers at or below 640px. @default 1 */
+  mobileCardScale?: number;
   imageArea?: { top: string; bottom: string };
   children?: React.ReactNode;
   className?: string;
@@ -133,6 +137,8 @@ export function ImageStreamHero({
   speed = 18,
   axis = 55,
   path,
+  mobileAxis,
+  mobileCardScale = 1,
   imageArea,
   children,
   className,
@@ -146,10 +152,24 @@ export function ImageStreamHero({
   const p = React.useMemo(() => ({ ...PATH, ...path }), [path]);
 
   const css = React.useMemo(
-    () =>
-      `${keyframes(1, right, p)}${keyframes(-1, left, p)}` +
-      `@media(prefers-reduced-motion:reduce){.${card}{animation-play-state:paused}}`,
-    [right, left, card, p],
+    () => {
+      const mobileRules = [
+        mobileAxis === undefined ? "" : `top:${mobileAxis}%!important;`,
+        mobileCardScale === 1
+          ? ""
+          : `width:${p.cardWidth * mobileCardScale}cqw!important;height:${p.cardHeight * mobileCardScale}cqw!important;margin-left:${(-p.cardWidth * mobileCardScale) / 2}cqw!important;margin-top:${(-p.cardHeight * mobileCardScale) / 2}cqw!important;border-radius:${p.cardRadius * mobileCardScale}cqw!important;`,
+      ].join("");
+      const mobileCardStyles = mobileRules
+        ? `@container (max-width: 640px){.${card}{${mobileRules}}}`
+        : "";
+
+      return (
+        `${keyframes(1, right, p)}${keyframes(-1, left, p)}` +
+        `@media(prefers-reduced-motion:reduce){.${card}{animation-play-state:paused}}` +
+        mobileCardStyles
+      );
+    },
+    [right, left, card, p, mobileAxis, mobileCardScale],
   );
 
   return (
