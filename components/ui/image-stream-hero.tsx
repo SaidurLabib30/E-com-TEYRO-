@@ -112,10 +112,13 @@ function keyframes(dir: 1 | -1, name: string, p: Required<CorridorPath>) {
 }
 
 export type StreamImage = {
+  /** Image URL rendered on a moving card. */
   src: string;
+  /** Accessible description; defaults to an empty alt for decorative imagery. */
   alt?: string;
 };
 
+/** Public controls for the animated corridor and optional overlay content. */
 export type ImageStreamHeroProps = {
   images: StreamImage[];
   cards?: number;
@@ -131,6 +134,7 @@ export type ImageStreamHeroProps = {
   className?: string;
 };
 
+// Render two staggered card rails behind caller-provided hero content.
 export function ImageStreamHero({
   images,
   cards = 9,
@@ -149,8 +153,10 @@ export function ImageStreamHero({
   const left = `ish-l-${id}`;
   const card = `ish-c-${id}`;
 
+  // Merge per-instance geometry with defaults before generating keyframes and sizing cards.
   const p = React.useMemo(() => ({ ...PATH, ...path }), [path]);
 
+  // Build instance-scoped CSS so multiple heroes can animate independently without name collisions.
   const css = React.useMemo(
     () => {
       const mobileRules = [
@@ -180,6 +186,7 @@ export function ImageStreamHero({
     >
       <style>{css}</style>
 
+      {/* Decorative animated image corridor; hidden from assistive technology. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 overflow-hidden"

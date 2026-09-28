@@ -6,12 +6,14 @@ import { getDiscountedPrice, getProducts, subscribe } from '../product-store';
 
 const NEW_ARRIVAL_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
 
+// Collection page with category selection and an optional rolling 14-day arrival filter.
 export default function ProductsPage() {
   const [products, setProducts] = useState(getProducts());
   const [activeCategory, setActiveCategory] = useState('all');
   const [newArrivalOnly, setNewArrivalOnly] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
+  // Reflect product additions and edits made elsewhere through the shared store.
   useEffect(() => {
     const updateProducts = () => setProducts(getProducts());
     const unsubscribe = subscribe(updateProducts);
@@ -19,10 +21,12 @@ export default function ProductsPage() {
     return unsubscribe;
   }, []);
 
+  // Read the new-arrivals filter from navigation query parameters on first render.
   useEffect(() => {
     setNewArrivalOnly(new URLSearchParams(window.location.search).get('filter') === 'new-arrivals');
   }, []);
 
+  // Schedule a refresh at the next product's 14-day cutoff so arrivals expire on time.
   useEffect(() => {
     if (!newArrivalOnly) return;
 
@@ -44,6 +48,7 @@ export default function ProductsPage() {
     return () => window.clearTimeout(timeoutId);
   }, [newArrivalOnly, now, products]);
 
+  // Apply the date window first, then narrow the remaining products by category.
   const filteredProducts = products.filter((p) => {
     if (newArrivalOnly) {
       const createdAt = Date.parse(p.createdAt ?? '');
@@ -58,6 +63,7 @@ export default function ProductsPage() {
     return true;
   });
 
+  // The same category definitions drive the selector buttons and their labels.
   const categories = [
     { id: 'tshirt', label: 'T-Shirts' },
     { id: 'shirt', label: 'Shirts' },
@@ -70,6 +76,7 @@ export default function ProductsPage() {
 
   return (
     <main className="customer-dashboard min-h-screen text-[#f5f5f4]">
+      {/* Shared storefront navigation and cart summary. */}
       <header className="SiteHeader">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-8">
           <div className="flex items-center gap-2.5">
@@ -85,6 +92,7 @@ export default function ProductsPage() {
         </div>
       </header>
 
+      {/* Collection heading, filter controls, empty state, and product listing. */}
       <section className="relative mx-auto max-w-7xl px-5 pb-24 pt-16 md:px-8 md:pt-20">
         <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-[#e8c27d]/8 blur-[100px]" />
         <div className="relative">

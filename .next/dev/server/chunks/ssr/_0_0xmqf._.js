@@ -48,7 +48,7 @@ __turbopack_context__.n(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$c
 "[project]/app/layout.tsx [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-// Root layout component that wraps every page in the app with HTML and body tags
+// Root layout shared by all routes; global styles and customer state are initialized here.
 __turbopack_context__.s([
     "default",
     ()=>RootLayout,

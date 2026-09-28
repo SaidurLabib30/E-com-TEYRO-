@@ -8,15 +8,18 @@ import ImageStreamHero from '@/components/ui/image-stream-hero';
 
 const discountReturnKey = 'teyro_discount_product_return';
 
+// Storefront home page: combines the hero, account dashboard, and featured catalog.
 export default function Home() {
   const [cart, setCart] = useState(0);
   const [products, setProducts] = useState(getProducts());
   const [searchTerm, setSearchTerm] = useState('');
   const [showDiscountedOnly, setShowDiscountedOnly] = useState(false);
 
+  // Normalize category terms so searches such as "T-shirts" match the stored category.
   const normalizeSearchText = (value: string) =>
     value.toLowerCase().replace(/[-_\s]+/g, '').replace(/&/g, 'and');
 
+  // Search is category-oriented; the aliases below map common garment names to categories.
   const filteredProducts = products.filter((product) => {
     const term = searchTerm.trim();
     if (!term) return true;
@@ -42,6 +45,7 @@ export default function Home() {
     ? filteredProducts.filter((product) => product.discount > 0)
     : filteredProducts;
 
+  // Toggle the sale view and move focus to the catalog, respecting reduced-motion preferences.
   const toggleDiscountedProducts = () => {
     setShowDiscountedOnly((current) => !current);
     window.requestAnimationFrame(() => {
@@ -51,12 +55,14 @@ export default function Home() {
     });
   };
 
+  // Remember a sale-product visit so returning from its detail page resets the sale view.
   const markDiscountProductNavigation = () => {
     if (showDiscountedOnly) {
       window.sessionStorage.setItem(discountReturnKey, 'true');
     }
   };
 
+  // Keep the header cart count in sync with the order flow's localStorage event.
   useEffect(() => {
     const syncCart = () => setCart(Number(window.localStorage.getItem('thread-cart') || 0));
     const syncUpdated = () => syncCart();
@@ -65,6 +71,7 @@ export default function Home() {
     return () => window.removeEventListener('thread-cart-updated', syncUpdated);
   }, []);
 
+  // Subscribe to shared product-store changes so admin edits appear without a reload.
   useEffect(() => {
     const updateProducts = () => setProducts(getProducts());
     const unsubscribe = subscribe(updateProducts);
@@ -72,6 +79,7 @@ export default function Home() {
     return unsubscribe;
   }, []);
 
+  // Restore the normal home view when browser navigation returns from a discounted item.
   useEffect(() => {
     const resetDiscountReturn = () => {
       const cameFromDiscount =
@@ -96,6 +104,7 @@ export default function Home() {
 
   return (
     <main className="customer-dashboard min-h-screen text-[#f5f5f4]">
+      {/* Store navigation, responsive search, and customer account entry point. */}
       <div className="customer-upper-section">
         <header className="SiteHeader">
           <div className="mx-auto flex max-w-7xl items-center gap-3 px-5 py-4 lg:px-8">
@@ -156,6 +165,7 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Animated product-image backdrop with the primary collection calls to action. */}
           <ImageStreamHero
             images={products.map((product) => ({
               src: product.img,
@@ -204,8 +214,10 @@ export default function Home() {
         </section>
       </div>
 
+      {/* Account order history is rendered as an overlay when opened from the header. */}
       <CustomerDashboard />
 
+      {/* Featured catalog: applies search and sale filters before rendering product cards. */}
       <section id="collection" className="mx-auto max-w-7xl px-5 pb-24 pt-16 md:px-8">
         <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>

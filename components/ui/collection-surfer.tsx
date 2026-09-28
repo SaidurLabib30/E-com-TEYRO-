@@ -11,8 +11,11 @@ import {
 } from "framer-motion";
 
 export interface CollectionItem {
+  /** Stable collection identifier used to key each rendered card. */
   id: number;
+  /** Image URL displayed by the card. */
   image: string;
+  /** Accessible image description and collection label. */
   title: string;
 }
 
@@ -118,11 +121,13 @@ const ITEMS: CollectionItem[] = [
   },
 ];
 
+// Optional items replace the demo collection; variant selects the pointer response.
 interface CollectionSurferProps {
   items?: CollectionItem[];
   variant?: CollectionSurferVariant;
 }
 
+// Full-screen scroll-driven 3D collection track with two copies for a seamless loop.
 export function CollectionSurfer({
   items = ITEMS,
   variant = "magnetic",
@@ -149,6 +154,7 @@ export function CollectionSurfer({
   // 2. Modulo Logic:
   // Instead of mapping 0 -> totalScroll, we map to a looped value.
   // loops 0 -> loopDistance -> 0 -> loopDistance...
+  // Wrap scroll progress at one original-list length so the duplicated track repeats.
   const loopedProgress = useTransform(
     smoothScroll,
     (value) => value % loopDistance,
@@ -181,6 +187,7 @@ export function CollectionSurfer({
   const mouseX = useMotionValue(-10000);
   const mouseY = useMotionValue(-10000);
 
+  // Feed pointer coordinates to card transforms; simple mode intentionally ignores them.
   const handleMouseMove = (e: React.MouseEvent) => {
     if (variant === "simple") return;
     mouseX.set(e.clientX);
@@ -262,6 +269,7 @@ export function CollectionSurfer({
   );
 }
 
+// One positioned collection image; pointer distance drives its selected visual variant.
 function Card({
   item,
   i,
@@ -286,6 +294,7 @@ function Card({
   const ref = useRef<HTMLDivElement>(null);
 
   // Calculate distance from mouse to center of card
+  // Recompute distance as pointer or scroll position changes so the effect follows moving cards.
   const distance = useTransform([mouseX, mouseY, scrollSpring], ([x, y]: number[]) => {
     if (!ref.current || variant === "simple") return 200; // Default large distance
     const rect = ref.current.getBoundingClientRect();

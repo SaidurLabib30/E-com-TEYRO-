@@ -9,6 +9,7 @@ import { addCustomerOrder, type CustomerOrderItem } from '../../customer-store';
 
 type DeliveryLocation = 'inside-dhaka' | 'outside-dhaka';
 
+// Flat delivery fees selected from the receiver's entered location.
 const deliveryCharges: Record<DeliveryLocation, number> = {
   'inside-dhaka': 70,
   'outside-dhaka': 150,
@@ -20,6 +21,7 @@ const customerDraftKey = 'teyro_pending_customer_details';
 const dhakaKeywords = ['dhaka', 'ঢাকা', 'mirpur', 'mohammadpur', 'uttara', 'gulshan', 'banani', 'baridhara', 'dhanmondi', 'motijheel', 'farmgate', 'tejgaon', 'bashundhara', 'shyamoli', 'jatrabari', 'demra', 'kazipara', 'old dhaka', 'new market'];
 const outsideKeywords = ['outside', 'বাইরে', 'bahir'];
 
+// Recognize known Dhaka names; any other non-empty location is treated as outside Dhaka.
 const detectDeliveryLocation = (location: string): DeliveryLocation | null => {
   const normalized = location.trim().toLowerCase();
   if (!normalized) return null;
@@ -28,9 +30,11 @@ const detectDeliveryLocation = (location: string): DeliveryLocation | null => {
   return 'outside-dhaka';
 };
 
+// Show up to two other catalog entries beneath the current product.
 const getRelatedProducts = (currentId: number, allProducts: Product[]) =>
   allProducts.filter((p) => p.id !== currentId).slice(0, 2);
 
+// Product detail and order form for the product ID in the current route.
 export default function ProductPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -49,6 +53,7 @@ export default function ProductPage() {
 
   const returnToHome = () => router.replace('/');
 
+  // Refresh the displayed product when admin edits the shared catalog.
   useEffect(() => {
     const updateProduct = () => setProduct(getProduct(Number(id)));
     const unsubscribe = subscribe(updateProduct);
@@ -56,6 +61,7 @@ export default function ProductPage() {
     return unsubscribe;
   }, [id]);
 
+  // Keep the cart badge synchronized with updates from this and other storefront views.
   useEffect(() => {
     const syncCart = () => setCart(Number(window.localStorage.getItem('thread-cart') || 0));
     const syncUpdated = () => syncCart();
@@ -64,6 +70,7 @@ export default function ProductPage() {
     return () => window.removeEventListener('thread-cart-updated', syncUpdated);
   }, []);
 
+  // Restore customer contact details saved while adding multiple products to one order.
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(customerDraftKey);
@@ -83,6 +90,7 @@ export default function ProductPage() {
     }
   }, []);
 
+  // Resume the pending order items and derive the cart quantity from their line items.
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(pendingItemsKey);
@@ -96,6 +104,7 @@ export default function ProductPage() {
     }
   }, []);
 
+  // Derived location controls the delivery fee and whether checkout can proceed.
   const deliveryLocation = detectDeliveryLocation(receiverLocation);
 
   const isValidEmail = (email: string): boolean => {
@@ -117,6 +126,7 @@ export default function ProductPage() {
     );
   }
 
+  // Price and order totals are derived from the current selection plus saved pending items.
   const discountedPrice = getDiscountedPrice(product.price, product.discount);
   const deliveryCharge = deliveryLocation ? deliveryCharges[deliveryLocation] : 0;
   const currentItem = selectedSize
@@ -135,6 +145,7 @@ export default function ProductPage() {
   const pendingSubtotal = pendingItems.reduce((total, item) => total + item.unitPrice * item.quantity, 0);
   const orderSubtotal = pendingSubtotal + (currentItem?.unitPrice || 0) * (currentItem?.quantity || 0);
 
+  // Save this product and contact draft so the customer can choose another product first.
   const addProduct = () => {
     if (!currentItem) return;
     const nextItems = [...pendingItems, currentItem];
@@ -150,6 +161,7 @@ export default function ProductPage() {
     router.push('/products');
   };
 
+  // Validate checkout details, create the order record, then clear the temporary cart draft.
   const addToCart = () => {
     if (!currentItem || !deliveryLocation) return;
     if (!customerName.trim()) return;
@@ -203,6 +215,7 @@ export default function ProductPage() {
 
   return (
     <main className="customer-dashboard min-h-screen text-[#f5f5f4]">
+      {/* Product navigation and current cart quantity. */}
       <header className="SiteHeader">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-8">
           <button type="button" onClick={returnToHome} className="flex items-center gap-2 text-sm font-semibold text-[#d7dce3] transition hover:text-[#f5f5f4]">
@@ -225,6 +238,7 @@ export default function ProductPage() {
           <ArrowLeft size={16} /> Back to collection
         </button>
 
+        {/* Product imagery and purchase form, including size, delivery, and contact details. */}
         <div className="mt-8 grid items-start gap-10 lg:grid-cols-[1.08fr_0.92fr]">
           <div className="mx-auto w-full max-w-[360px] space-y-4">
             <div className="relative">
@@ -454,6 +468,7 @@ export default function ProductPage() {
           </div>
         </div>
 
+        {/* Measurement reference for helping customers choose a garment size. */}
         <section className="mt-16 rounded-[2rem] border border-white/8 bg-[#111821]/90 p-5 shadow-[0_20px_60px_rgba(7,10,14,0.24)] md:p-7">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -495,6 +510,7 @@ export default function ProductPage() {
         </section>
       </section>
 
+      {/* Related catalog items provide a path to continue shopping. */}
       <section className="mx-auto max-w-7xl px-5 pb-20 md:px-8">
         <div className="rounded-[2rem] border border-white/8 bg-[#111821]/85 p-6 shadow-[0_20px_60px_rgba(7,10,14,0.26)] md:p-8">
           <div className="flex items-start justify-between gap-4">

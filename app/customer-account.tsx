@@ -9,6 +9,7 @@ type AccountView = 'login' | 'register';
 
 const inputClass = 'w-full rounded-2xl border border-white/8 bg-[#1a2230] px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#8f99a8] focus:border-[#e8c27d]';
 
+// Header account controls for login, registration, dashboard access, and logout.
 export function CustomerAuthPanel() {
   const { customer, openDashboard, logout } = useCustomer();
   const [authOpen, setAuthOpen] = useState(false);
@@ -22,6 +23,7 @@ export function CustomerAuthPanel() {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
 
+  // Validate matching registration passwords, call the store action, and show its result.
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
@@ -81,6 +83,7 @@ export function CustomerAuthPanel() {
         )}
       </div>
 
+      {/* Login and registration form; authentication and validation live in customer-store. */}
       {authOpen && !customer && (
         <aside className="absolute right-0 top-full z-40 mt-3 w-[min(88vw,320px)] rounded-[1.6rem] border border-white/8 bg-[#111821]/95 p-5 shadow-[0_24px_60px_rgba(7,10,14,0.4)]">
           <div className="flex items-center justify-between gap-4">
@@ -113,6 +116,7 @@ export function CustomerAuthPanel() {
         </aside>
       )}
 
+      {/* Signed-in account menu opens order history or ends the local session. */}
       {accountOpen && customer && (
         <div className="absolute right-0 top-full z-40 mt-3 w-44 rounded-[1.2rem] border border-white/8 bg-[#111821]/95 p-2 shadow-[0_24px_60px_rgba(7,10,14,0.4)]">
           <button type="button" onClick={() => { setAccountOpen(false); openDashboard(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-white transition hover:bg-white/6">
@@ -127,12 +131,15 @@ export function CustomerAuthPanel() {
   );
 }
 
+// Use a compact, locale-aware date label in customer order history.
 const formatDate = (date: string) => new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(date));
 
+// Modal dashboard that subscribes to the signed-in customer's own order list.
 export function CustomerDashboard() {
   const { customer, dashboardOpen, closeDashboard, logout } = useCustomer();
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
 
+  // Load and keep order history current only while the customer's dashboard is open.
   useEffect(() => {
     if (!dashboardOpen || !customer) return;
     const syncOrders = () => setOrders(getOwnOrders());
@@ -144,6 +151,7 @@ export function CustomerDashboard() {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[#0a0d12]/80 px-4 py-6 backdrop-blur-sm sm:px-6">
+      {/* Customer identity, session controls, and order history table. */}
       <section role="dialog" aria-modal="true" aria-labelledby="customer-dashboard-title" className="mx-auto max-w-4xl rounded-[2rem] border border-white/8 bg-[#111821] shadow-[0_28px_80px_rgba(7,10,14,0.45)]">
         <div className="flex items-start justify-between gap-5 border-b border-white/8 p-6 sm:p-8">
           <div>

@@ -89,11 +89,13 @@ export default function Admin(){
  const [loginError,setLoginError]=useState('');
  const ADMIN_SESSION_KEY='teyro_admin_session';
 
+ // This demo gate uses a hard-coded credential and localStorage, not server-side authorization.
  useEffect(()=>{
   setIsAuthenticated(window.localStorage.getItem(ADMIN_SESSION_KEY)==='active');
   setAuthReady(true);
  },[]);
 
+ // Check the demo credentials and persist the signed-in flag for this browser.
  const handleLogin=(event:React.FormEvent<HTMLFormElement>)=>{
   event.preventDefault();
   if(loginEmail.trim().toLowerCase()!=='admin@gmail.com'||loginPassword!=='admin'){
@@ -140,6 +142,7 @@ export default function Admin(){
   const discountedPriceValue=getDiscountedPrice(basePrice,discountPercent);
 
   // Subscribe to product store changes so admin sees updates in real-time
+  // Keep the product table current as the shared catalog changes.
   useEffect(()=>{
    const updateProducts=()=>setProducts(getProducts());
    const unsubscribe=subscribe(updateProducts);
@@ -147,6 +150,7 @@ export default function Admin(){
    return unsubscribe;
   },[]);
 
+  // Load order records and refresh the dashboard after order or status updates.
   useEffect(()=>{
    const updateOrders=()=>setOrderList(getAllOrders());
    updateOrders();
@@ -551,6 +555,7 @@ return (
  );
 }
 
+// Reusable order list used by both dashboard preview and the full orders tab.
 function OrdersTable({orders,setSelectedOrder}:{orders:CustomerOrder[];setSelectedOrder:(order:CustomerOrder)=>void}){
   return (
    <div className="overflow-x-auto rounded-xl border border-white/10">
@@ -593,6 +598,7 @@ function OrdersTable({orders,setSelectedOrder}:{orders:CustomerOrder[];setSelect
   );
  }
 
+ // Modal summary of the selected order's customer details, totals, and line items.
  function OrderDetails({order,onClose}:{order:CustomerOrder;onClose:()=>void}){
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5" onClick={onClose}>
    <section className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-[#0f172a] p-6 shadow-2xl shadow-black/50" onClick={event=>event.stopPropagation()}>

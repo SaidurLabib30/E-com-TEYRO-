@@ -1,5 +1,5 @@
-// Shared product store with localStorage persistence
-// Uses localStorage as the database so products survive page refreshes
+// Shared browser-local product store; localStorage keeps catalog edits across reloads.
+// This is client-side persistence, not a server database.
 
 import { Size, sizeChart, sizes } from './product-data';
 
@@ -22,7 +22,7 @@ export type Product = {
 // localStorage key for product persistence
 const STORAGE_KEY = 'teyro_products';
 
-// Initial product catalog (seed data)
+// Seed catalog used on first visit or when stored data cannot be read.
 const initialProducts: Product[] = [
   {id:1,name:"Essential Black Tee",price:799,discount:0,color:"Black",img:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85",images:["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85","https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85&crop=entropy"],description:"A clean everyday tee cut for easy movement and layered styling.",category:"T-Shirts",sizeStock:{S:10,M:14,L:10,XL:5,XXL:3},status:"Active"},
   {id:2,name:"Classic White Tee",price:699,discount:0,color:"White",img:"https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&fit=crop&w=900&q=85",images:["https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&fit=crop&w=900&q=85","https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&fit=crop&w=900&q=85&crop=entropy"],description:"A soft white staple with a relaxed shape that works all year.",category:"T-Shirts",sizeStock:{S:8,M:10,L:7,XL:4,XXL:2},status:"Active"},
@@ -30,7 +30,7 @@ const initialProducts: Product[] = [
   {id:4,name:"Minimal Grey Tee",price:749,discount:0,color:"Grey",img:"https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=900&q=85",images:["https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=900&q=85","https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=900&q=85&crop=entropy"],description:"A minimal grey tee with a comfortable fit and understated finish.",category:"T-Shirts",sizeStock:{S:0,M:0,L:0,XL:0,XXL:0},status:"Out of stock"}
 ];
 
-// Load products from localStorage or use initial data
+// Load saved products when available, otherwise provide seed data for server rendering and new browsers.
 function loadProducts(): Product[] {
   if (typeof window === 'undefined') {
     return [...initialProducts];
@@ -49,7 +49,7 @@ function loadProducts(): Product[] {
   return [...initialProducts];
 }
 
-// Save products to localStorage
+// Persist the catalog; retry with smaller image arrays if the storage quota is exceeded.
 function saveProducts(products: Product[]): void {
   if (typeof window === 'undefined') return;
   try {
@@ -67,10 +67,11 @@ function saveProducts(products: Product[]): void {
   }
 }
 
-// Module-level product state (singleton) - loaded from localStorage
+// Module-level singleton shared by pages; nextId stays above the largest current product ID.
 let products: Product[] = loadProducts();
 let nextId = products.reduce((max, p) => Math.max(max, p.id), 0) + 1;
 
+// Re-read persisted state before operations so another tab's edits are not overwritten.
 function refreshProductsFromStorage(): void {
   if (typeof window === 'undefined') return;
   const storedProducts = loadProducts();
@@ -82,7 +83,7 @@ function refreshProductsFromStorage(): void {
 type Listener = () => void;
 const listeners: Listener[] = [];
 
-// Subscribe to product changes
+// Subscribe to local updates and browser storage events; callers receive an unsubscribe function.
 export function subscribe(listener: Listener): () => void {
   listeners.push(listener);
   if (typeof window !== 'undefined') {
@@ -109,7 +110,7 @@ function notifyListeners(): void {
   listeners.forEach((listener) => listener());
 }
 
-// Get current products (snapshot)
+// Return a shallow snapshot so callers cannot replace the store's top-level array.
 export function getProducts(): Product[] {
   refreshProductsFromStorage();
   return [...products];
@@ -159,6 +160,7 @@ export function deleteProduct(id: number): boolean {
   return false;
 }
 
+// Clamp discounts to 0-100% and round the resulting price to whole currency units.
 export const getDiscountedPrice = (price: number, discount = 0): number =>
   Math.max(0, Math.round(price * (1 - Math.min(100, Math.max(0, discount)) / 100)));
 

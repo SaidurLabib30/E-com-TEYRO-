@@ -16,6 +16,7 @@ var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.sign
 'use client';
 ;
 ;
+// Shares the current customer and dashboard controls with storefront components.
 const CustomerContext = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createContext"])(null);
 function CustomerProvider({ children }) {
     _s();
@@ -23,6 +24,7 @@ function CustomerProvider({ children }) {
         "CustomerProvider.useState": ()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$customer$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getCurrentCustomer"])()
     }["CustomerProvider.useState"]);
     const [dashboardOpen, setDashboardOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    // Synchronize context state with customer-store events and cross-tab storage changes.
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "CustomerProvider.useEffect": ()=>{
             const syncCustomer = {
@@ -32,6 +34,7 @@ function CustomerProvider({ children }) {
             return (0, __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$customer$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["subscribeCustomerChanged"])(syncCustomer);
         }
     }["CustomerProvider.useEffect"], []);
+    // Clear both persisted session data and the provider's visible account state.
     const logout = ()=>{
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$customer$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["logoutCustomer"])();
         setCustomer(null);
@@ -48,7 +51,7 @@ function CustomerProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/app/customer-provider.tsx",
-        lineNumber: 33,
+        lineNumber: 37,
         columnNumber: 5
     }, this);
 }
@@ -92,13 +95,16 @@ __turbopack_context__.s([
     "updateCustomerOrderStatus",
     ()=>updateCustomerOrderStatus
 ]);
+// Browser-local keys and events used to share customer, order, and session state.
 const CUSTOMERS_KEY = 'teyro_customers';
 const ORDERS_KEY = 'teyro_customer_orders';
 const SESSION_KEY = 'teyro_customer_session';
 const CUSTOMER_EVENT = 'teyro-customer-changed';
 const ORDERS_EVENT = 'teyro-orders-changed';
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 14;
+// This prototype stores data in each browser; it does not call a server or database.
 const canUseBrowserStorage = ()=>("TURBOPACK compile-time value", "object") !== 'undefined';
+// Read/write helpers keep server rendering safe and fall back when stored JSON is invalid.
 const readJson = (key, fallback)=>{
     if (!canUseBrowserStorage()) //TURBOPACK unreachable
     ;
@@ -123,6 +129,7 @@ const removeStorage = (key)=>{
     ;
     window.localStorage.removeItem(key);
 };
+// Normalize account identifiers consistently before lookup or persistence.
 const normalizeEmail = (email)=>email.trim().toLowerCase();
 const bytesToHex = (bytes)=>Array.from(bytes, (byte)=>byte.toString(16).padStart(2, '0')).join('');
 const randomValue = ()=>{
@@ -135,6 +142,7 @@ const randomToken = ()=>{
     }
     return randomValue();
 };
+// Derive a salted PBKDF2 hash with the Web Crypto API; only salt and hash are stored.
 const hashPassword = async (password, salt = randomToken())=>{
     const encoder = new TextEncoder();
     const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, [
@@ -155,6 +163,7 @@ const passwordMatches = async (password, customer)=>{
     const result = await hashPassword(password, customer.passwordSalt);
     return result.hash === customer.passwordHash;
 };
+// Typed accessors keep localStorage parsing and persistence centralized by record type.
 const getCustomers = ()=>readJson(CUSTOMERS_KEY, []);
 const saveCustomers = (customers)=>writeJson(CUSTOMERS_KEY, customers);
 const getOrders = ()=>readJson(ORDERS_KEY, []);
@@ -165,6 +174,7 @@ const notifyCustomerChanged = ()=>{
 const notifyOrdersChanged = ()=>{
     if (canUseBrowserStorage()) window.dispatchEvent(new Event(ORDERS_EVENT));
 };
+// Reject expired sessions and remove their browser-side session record.
 const getSession = ()=>{
     const session = readJson(SESSION_KEY, null);
     if (!session || Date.parse(session.expiresAt) <= Date.now()) {
@@ -173,6 +183,7 @@ const getSession = ()=>{
     }
     return session;
 };
+// Create a two-week browser session and register its token against the customer record.
 const setSession = (customer)=>{
     const session = {
         userId: customer.id,
@@ -190,6 +201,7 @@ const setSession = (customer)=>{
     notifyCustomerChanged();
     return session;
 };
+// Revoke the active token, remove the session, and notify account UI subscribers.
 const clearSession = (session)=>{
     if (session) {
         saveCustomers(getCustomers().map((customer)=>customer.id === session.userId ? {

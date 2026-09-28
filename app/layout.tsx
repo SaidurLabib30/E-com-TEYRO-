@@ -1,11 +1,11 @@
-// Root layout component that wraps every page in the app with HTML and body tags
+// Root layout shared by all routes; global styles and customer state are initialized here.
 import "./globals.css";
 import { CustomerProvider } from './customer-provider';
 
-// Metadata for the app: used in the browser tab title and SEO description
+// Default title and description used by Next.js metadata for every route.
 export const metadata = { title: "Teyro — T-Shirts", description: "Simple T-shirt store" };
 
-// Root layout component
+// Wrap page content in the provider so account controls share one customer session.
 export default function RootLayout({children}:{children:React.ReactNode}) {
   return <html lang="en"><body><CustomerProvider>{children}</CustomerProvider></body></html>;
 }

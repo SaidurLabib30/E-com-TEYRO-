@@ -51,6 +51,7 @@ type CustomerSession = {
   expiresAt: string;
 };
 
+// Browser-local keys and events used to share customer, order, and session state.
 const CUSTOMERS_KEY = 'teyro_customers';
 const ORDERS_KEY = 'teyro_customer_orders';
 const SESSION_KEY = 'teyro_customer_session';
@@ -58,8 +59,10 @@ const CUSTOMER_EVENT = 'teyro-customer-changed';
 const ORDERS_EVENT = 'teyro-orders-changed';
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 14;
 
+// This prototype stores data in each browser; it does not call a server or database.
 const canUseBrowserStorage = () => typeof window !== 'undefined';
 
+// Read/write helpers keep server rendering safe and fall back when stored JSON is invalid.
 const readJson = <T,>(key: string, fallback: T): T => {
   if (!canUseBrowserStorage()) return fallback;
   try {
@@ -83,6 +86,7 @@ const removeStorage = (key: string): void => {
   window.localStorage.removeItem(key);
 };
 
+// Normalize account identifiers consistently before lookup or persistence.
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 const bytesToHex = (bytes: Uint8Array) => Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
@@ -99,6 +103,7 @@ const randomToken = () => {
   return randomValue();
 };
 
+// Derive a salted PBKDF2 hash with the Web Crypto API; only salt and hash are stored.
 const hashPassword = async (password: string, salt = randomToken()) => {
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
@@ -115,6 +120,7 @@ const passwordMatches = async (password: string, customer: Customer) => {
   return result.hash === customer.passwordHash;
 };
 
+// Typed accessors keep localStorage parsing and persistence centralized by record type.
 const getCustomers = (): Customer[] => readJson<Customer[]>(CUSTOMERS_KEY, []);
 const saveCustomers = (customers: Customer[]) => writeJson(CUSTOMERS_KEY, customers);
 const getOrders = (): CustomerOrder[] => readJson<CustomerOrder[]>(ORDERS_KEY, []);
@@ -128,6 +134,7 @@ const notifyOrdersChanged = () => {
   if (canUseBrowserStorage()) window.dispatchEvent(new Event(ORDERS_EVENT));
 };
 
+// Reject expired sessions and remove their browser-side session record.
 const getSession = (): CustomerSession | null => {
   const session = readJson<CustomerSession | null>(SESSION_KEY, null);
   if (!session || Date.parse(session.expiresAt) <= Date.now()) {
@@ -137,6 +144,7 @@ const getSession = (): CustomerSession | null => {
   return session;
 };
 
+// Create a two-week browser session and register its token against the customer record.
 const setSession = (customer: Customer): CustomerSession => {
   const session: CustomerSession = {
     userId: customer.id,
@@ -149,6 +157,7 @@ const setSession = (customer: Customer): CustomerSession => {
   return session;
 };
 
+// Revoke the active token, remove the session, and notify account UI subscribers.
 const clearSession = (session: CustomerSession | null) => {
   if (session) {
     saveCustomers(getCustomers().map(customer => customer.id === session.userId
@@ -159,6 +168,7 @@ const clearSession = (session: CustomerSession | null) => {
   notifyCustomerChanged();
 };
 
+// Resolve the active customer only when the session token still belongs to that record.
 export const getCurrentCustomer = (): Customer | null => {
   const session = getSession();
   if (!session) return null;
@@ -170,6 +180,7 @@ export const getCurrentCustomer = (): Customer | null => {
   return customer;
 };
 
+// Validate and create a browser-local account; return a result object for the form UI.
 export const registerCustomer = async (fullName: string, email: string, password: string) => {
   const normalizedEmail = normalizeEmail(email);
   const trimmedName = fullName.trim();
@@ -196,6 +207,7 @@ export const registerCustomer = async (fullName: string, email: string, password
   }
 };
 
+// Match normalized email and password hash, then persist a fresh session on success.
 export const loginCustomer = async (email: string, password: string) => {
   const normalizedEmail = normalizeEmail(email);
   const customer = getCustomers().find(item => item.email === normalizedEmail);
@@ -206,8 +218,10 @@ export const loginCustomer = async (email: string, password: string) => {
   return { ok: true as const, customer };
 };
 
+// End the current browser session and remove its token from the customer record.
 export const logoutCustomer = () => clearSession(getSession());
 
+// Add an order to browser storage, associating it with a signed-in account when available.
 export const addCustomerOrder = (order: NewCustomerOrder): CustomerOrder => {
   const customer = getCurrentCustomer();
   const normalizedEmail = normalizeEmail(order.customerEmail);
@@ -230,9 +244,11 @@ export const addCustomerOrder = (order: NewCustomerOrder): CustomerOrder => {
   return newOrder;
 };
 
+// Return every stored order newest-first for the admin dashboard and orders table.
 export const getAllOrders = (): CustomerOrder[] => getOrders()
   .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 
+// Persist a new status for one order; return null when the requested ID is unknown.
 export const updateCustomerOrderStatus = (orderId: string, status: CustomerOrder['status']): CustomerOrder | null => {
   const order = getOrders().find(item => item.id === orderId);
   if (!order) return null;
@@ -242,6 +258,7 @@ export const updateCustomerOrderStatus = (orderId: string, status: CustomerOrder
   return updatedOrder;
 };
 
+// Return newest-first orders for the active customer, including earlier guest orders by email.
 export const getOwnOrders = (): CustomerOrder[] => {
   const customer = getCurrentCustomer();
   if (!customer) return [];
@@ -250,6 +267,7 @@ export const getOwnOrders = (): CustomerOrder[] => {
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 };
 
+// Subscribe to same-tab custom events and cross-tab storage updates; return cleanup functions.
 export const subscribeCustomerChanged = (listener: () => void) => {
   if (!canUseBrowserStorage()) return () => undefined;
   const handler = () => listener();
@@ -261,6 +279,7 @@ export const subscribeCustomerChanged = (listener: () => void) => {
   };
 };
 
+// Refresh admin order views when this tab or another tab changes order storage.
 export const subscribeOrdersChanged = (listener: () => void) => {
   if (!canUseBrowserStorage()) return () => undefined;
   const handler = () => listener();
